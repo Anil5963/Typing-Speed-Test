@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typing speed</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="flex justify-center items-center min-h-screen">
+  <div class="flex flex-col items-center h-[600px] w-[800px] border-2 border-red-500">
+    <h1 class="font-bold text-4xl text-white pt-4 pb-8">Typing Speed Test</h1>
+    <div class="para text-2xl text-green-500 opacity-70 font-bold"></div>
+    <div class="flex justify-center items-center pt-4">
+      <p class="timer flex justify-center items-center text-xl font-bold">Time countdown :00 :00 :00</p>
+    </div>
+    <div class="py-4">
+      <textarea placeholder="Start typing here...."
+        class="texttyping h-20 w-[750px] flex justify-center items-center px-4"></textarea>
+    </div>
+    <div class="flex justify-center items-center gap-10">
+      <button
+        class="reset flex justify-center items-center px-3 py-2 bg-red-500 rounded-xl font-bold text-xl hover:bg-red-600">Reset</button>
+      <button
+        class="start flex justify-center items-center px-3 py-2 bg-blue-500 rounded-xl font-bold text-xl hover:bg-blue-600">Start</button>
+      <button
+        class="submit flex justify-center items-center px-3 py-2 bg-green-500 rounded-xl font-bold text-xl hover:bg-green-600">Submit</button>
+      <button
+        class="next flex justify-center items-center px-3 py-2 bg-yellow-500 rounded-xl font-bold text-xl hover:bg-yellow-600">Next</button>
+    </div>
+    <div class="grid grid-cols-10 bg-gray-400 justify-center items-center mt-4 keyboard" id="keyboard"></div>
+  </div>
+
+
+  <script>
+    const para = document.querySelector(".para")
+    const timer = document.querySelector(".timer")
+    const texttyping = document.querySelector(".texttyping")
+    const reset = document.querySelector(".reset")
+    const start = document.querySelector(".start")
+    const submit = document.querySelector(".submit")
+    const next = document.querySelector(".next")
+    const keyboard = document.querySelector(".keyboard")
+
+    const keys = [
+      "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
+      "q", "w", "e", "r", "t", "y", "u", "i", "o", "p",
+      "a", "s", "d", "f", "g", "h", "j", "k", "l", "'",
+      "shift", "z", "x", "c", "v", "b", "n", "m", "?", "&",
+      ",", "space", ".", "backkey", ":", "=", "@", "!", "%", "$"
+    ]
+
+    let minute = 0
+    let second = 0
+    let milisecond = 0
+    let interval
+
+    const minuteE = document.createElement("span")
+    const secondE = document.createElement("span")
+    const milisecondE = document.createElement("span")
+
+    let index = 0;
+    let currentindex = "";
+    let sentences = [];
+
+    // fetch data fron json file
+    fetch("sentence.json")
+      .then(response => response.json())
+      .then(data => {
+        sentences = data.sentences; // ✅ consistent name
+        currentindex = sentences[index];
+        para.textContent = currentindex;
+      })
+      .catch(error => console.error("Error:", error));
+
+
+
+    // start button
+    start.addEventListener("click", () => {
+      if (!interval) {
+        interval = setInterval(() => {
+          milisecond++
+          if (milisecond === 100) {
+            milisecond = 0
+            second++
+          }
+
+          if (second === 60) {
+            second = 0
+            minute++
+          }
+
+          minuteE.textContent = String(minute).padStart(2, "0") + " : "
+          secondE.textContent = String(second).padStart(2, "0") + " : "
+          milisecondE.textContent = String(milisecond).padEnd(2, "0")
+
+          timer.textContent = "Time countdown : ", timer.append(minuteE, secondE, milisecondE)
+          const exacttime = timer.textContent
+
+          // mouse in textarea
+          texttyping.focus()
+
+        }, 10);
+      }
+    })
+
+
+
+    // submit button
+    submit.addEventListener("click", () => {
+      clearInterval(interval)
+
+      minuteE.textContent = String(minute).padStart(2, "0") + " : "
+      secondE.textContent = String(second).padStart(2, "0") + " : "
+      milisecondE.textContent = String(milisecond).padEnd(2, "0")
+
+      if (texttyping.value === para.textContent) {
+        timer.textContent = "✅ Well done! You completed the sentence in :";
+        timer.append(minuteE, secondE, milisecondE);
+      } else {
+        timer.textContent = "⚠️ The text doesn't match. Please try again.";
+      }
+
+    })
+
+    // enter = submit
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        submit.click(); 
+      }
+    });
+
+
+
+    // reset button
+    reset.addEventListener("click", () => {
+      clearInterval(interval)
+      interval = null
+
+      minute = 0
+      second = 0
+      milisecond = 0
+
+      minuteE.textContent = String(minute).padStart(2, "0") + " : "
+      secondE.textContent = String(second).padStart(2, "0") + " : "
+      milisecondE.textContent = String(milisecond).padStart(2, "0")
+
+      timer.textContent = "Time countdown : ", timer.append(minuteE, secondE, milisecondE)
+
+      // textarea text
+      texttyping.value = ""
+    })
+
+
+
+    // Next button
+    next.addEventListener("click", () => {
+      if (index < sentences.length - 1) {
+        index++;
+        currentindex = sentences[index];
+        para.textContent = currentindex;
+      } else {
+        console.log("No more sentences!");
+      }
+
+      clearInterval(interval)
+      interval = null
+
+      minute = 0
+      second = 0
+      milisecond = 0
+
+      minuteE.textContent = String(minute).padStart(2, "0") + " : "
+      secondE.textContent = String(second).padStart(2, "0") + " : "
+      milisecondE.textContent = String(milisecond).padStart(2, "0")
+
+      timer.textContent = "Time countdown : ", timer.append(minuteE, secondE, milisecondE)
+
+      // textarea text
+      texttyping.value = ""
+
+    });
+
+
+    keys.forEach(key => {
+      const keyElement = document.createElement("div")
+      keyElement.innerText = key
+      keyElement.classList.add("h-[40px]", "w-[65px]", "flex", "justify-center", "items-center", "m-1", "bg-grey-600", "border-2", "border-white")
+      keyElement.setAttribute("data-key", key)
+      keyboard.appendChild(keyElement)
+    })
+
+    document.addEventListener("keydown", (e) => {
+      const pressedKey = e.key.toLowerCase()
+      const keyElement = document.querySelector(`[data-key="${pressedKey}"]`)
+      if (keyElement) keyElement.classList.add("bg-green-500")
+      if (keyElement === "space") keyElement.classList.add("bg-green-500")
+      if (keyElement === "backkey") keyElement.classList.add("bg-green-500")
+    })
+
+    document.addEventListener("keyup", (e) => {
+      const pressedKey = e.key.toLowerCase()
+      const keyElement = document.querySelector(`[data-key="${pressedKey}"]`)
+      if (keyElement) keyElement.classList.remove("bg-green-500")
+      if (keyElement === "space") keyElement.classList.add("bg-green-500")
+      if (keyElement === "backkey") keyElement.classList.add("bg-green-500")
+    })
+
+  </script>
+
+</body>
+</html>
